@@ -1,6 +1,6 @@
 node_modules
 channels
-user-stats.json
+user_stats.json
 
 # secrets
 .env

@@ -2,6 +2,7 @@ const axios = require('axios');
 const querystring = require('querystring');
 const sortBy = require('lodash.sortby');
 const keys = require('lodash.keys');
+const get = require('lodash.get');
 const fs = require('mz/fs');
 const mkdir = require('mkdirp');
 const path = require('path');
@@ -17,12 +18,9 @@ const getHistory  = async (data) => {
 
 const getUserIdMessageCount = (history, messages) => {
     messages.forEach(message => {
-        if(history[message.user]) {
-            history[message.user] = history[message.user] + 1;
-        } else {
-            history[message.user] = 1;
-        }
+        history[message.user] = (history[message.user] || 0) + 1;
     })
+    return history;
 }
 
 const getLatest = channel => {
@@ -49,6 +47,7 @@ const getAllHistory = async (channels, existingChannels = {}) => {
     let history = {};
     for(channel of channels) {
         const latest = getLatest(existingChannels[channel.id]);
+        const existingMessages = get(existingChannels, `${channel.id}.messages`, []);
         if (latest) {
             console.log(`${channel.id} is cached; using ${latest} as oldest message`);
         }
@@ -63,7 +62,6 @@ const getAllHistory = async (channels, existingChannels = {}) => {
         try {
             let historyResponse = await getHistory(data);
             messages = messages.concat(historyResponse.data.messages);
-            getUserIdMessageCount(history, messages);
             let i = 0;
             while(historyResponse.data.has_more) {
                 data.cursor = historyResponse.data.response_metadata.next_cursor;
@@ -72,7 +70,9 @@ const getAllHistory = async (channels, existingChannels = {}) => {
                 getUserIdMessageCount(history, historyResponse.data.messages);
                 i++;
             }
-            await writeChannel(channel, existingChannels[channel.id], sortBy(messages, 'ts'));
+            messages = sortBy(messages, 'ts');
+            history = getUserIdMessageCount(history, existingMessages.concat(messages));
+            await writeChannel(channel, existingChannels[channel.id], messages);
         } catch(e) {
             if(e.response && e.response.status === 429) {
                 await delay(e.response.headers['retry-after'] * 1000);
@@ -116,7 +116,7 @@ const getAllChannels = async () => {
             name: channel.name
         }))
         .filter(channel => channel.userCount > 2);
-    return sortBy(channels, 'userCount').reverse();
+    return sortBy(channels, 'userCount').reverse().slice(0, 5);
 }
 
 const getAllUsers = async () => {
