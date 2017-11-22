@@ -1,12 +1,12 @@
-const axios = require("axios");
-const querystring = require("querystring");
-const sortBy = require("lodash.sortby");
-const keys = require("lodash.keys");
-const get = require("lodash.get");
-const fs = require("mz/fs");
-const mkdir = require("mkdirp");
-const path = require("path");
-require("dotenv").config();
+const axios = require('axios');
+const querystring = require('querystring');
+const sortBy = require('lodash.sortby');
+const keys = require('lodash.keys');
+const get = require('lodash.get');
+const fs = require('mz/fs');
+const mkdir = require('mkdirp');
+const path = require('path');
+require('dotenv').config();
 
 const { API_KEY } = process.env;
 
@@ -14,7 +14,7 @@ const getHistory = async data => {
   let dataQueryString = querystring.stringify(data);
   await delay(1000);
   return await axios.post(
-    "https://slack.com/api/conversations.history",
+    'https://slack.com/api/conversations.history',
     dataQueryString
   );
 };
@@ -42,7 +42,7 @@ const writeChannel = async (channel, existingChannel = {}, messages = []) => {
     .writeFile(
       `channels/${channel.id}.json`,
       JSON.stringify(channelData),
-      "utf8"
+      'utf8'
     )
     .catch(e => {
       console.warn(`Failed on writing channel ${channel.id}`);
@@ -88,7 +88,7 @@ const getAllHistory = async (channels, existingChannels = {}) => {
         getUserIdMessageCount(history, historyResponse.data.messages);
         i++;
       }
-      messages = sortBy(messages, "ts");
+      messages = sortBy(messages, 'ts');
       history = getUserIdMessageCount(
         history,
         existingMessages.concat(messages)
@@ -96,7 +96,7 @@ const getAllHistory = async (channels, existingChannels = {}) => {
       await writeChannel(channel, existingChannels[channel.id], messages);
     } catch (e) {
       if (e.response && e.response.status === 429) {
-        await delay(e.response.headers["retry-after"] * 1000);
+        await delay(e.response.headers['retry-after'] * 1000);
       } else {
         console.warn(e);
       }
@@ -106,17 +106,17 @@ const getAllHistory = async (channels, existingChannels = {}) => {
 };
 
 const getCachedChannels = async () => {
-  const base = path.resolve("channels");
+  const base = path.resolve('channels');
   const channels = await fs.readdir(base);
 
   let cache = {};
   for (let cachedChannelPath of channels) {
-    const [id] = cachedChannelPath.split(".json");
+    const [id] = cachedChannelPath.split('.json');
     let channel;
     try {
       const contents = await fs.readFile(
         path.join(base, cachedChannelPath),
-        "utf8"
+        'utf8'
       );
       channel = JSON.parse(contents);
     } catch (e) {
@@ -133,7 +133,7 @@ const getAllChannels = async () => {
     token: API_KEY
   });
   const channelResponse = await axios.post(
-    "https://slack.com/api/channels.list",
+    'https://slack.com/api/channels.list',
     data
   );
   const channels = channelResponse.data.channels
@@ -143,7 +143,7 @@ const getAllChannels = async () => {
       name: channel.name
     }))
     .filter(channel => channel.userCount > 2);
-  return sortBy(channels, "userCount").reverse();
+  return sortBy(channels, 'userCount').reverse();
 };
 
 const getAllUsers = async () => {
@@ -151,7 +151,7 @@ const getAllUsers = async () => {
     token: API_KEY
   });
   const usersResponse = await axios.post(
-    "https://slack.com/api/users.list",
+    'https://slack.com/api/users.list',
     data
   );
   return usersResponse.data.members.map(user => ({
@@ -164,7 +164,7 @@ const delay = duration => new Promise(resolve => setTimeout(resolve, duration));
 
 (async () => {
   try {
-    await mkdir("channels");
+    await mkdir('channels');
     const cached = await getCachedChannels();
     const channels = await getAllChannels();
     console.log(`# of channels: ${channels.length}`);
@@ -174,8 +174,8 @@ const delay = duration => new Promise(resolve => setTimeout(resolve, duration));
       user: allUsers.find(user => user.id === userId),
       count: history[userId]
     }));
-    const sorted = sortBy(userNamesCount, "count").reverse();
-    await fs.writeFile("user_stats.json", JSON.stringify(sorted)).catch(e => {
+    const sorted = sortBy(userNamesCount, 'count').reverse();
+    await fs.writeFile('user_stats.json', JSON.stringify(sorted)).catch(e => {
       console.warn(e);
       throw e;
     });
