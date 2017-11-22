@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "precommit": "lint-staged",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -16,5 +17,16 @@
     "lodash.sortby": "~4.7.0",
     "mkdirp": "~0.5.1",
     "mz": "~2.7.0"
+  },
+  "devDependencies": {
+    "husky": "~0.14.3",
+    "lint-staged": "~5.0.0",
+    "prettier": "~1.8.2"
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write",
+      "git add"
+    ]
   }
 }
