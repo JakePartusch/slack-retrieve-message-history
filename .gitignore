@@ -1,2 +1,6 @@
-tmp
 node_modules
+channels
+user-stats.json
+
+# secrets
+.env
