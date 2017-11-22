@@ -116,7 +116,7 @@ const getAllChannels = async () => {
             name: channel.name
         }))
         .filter(channel => channel.userCount > 2);
-    return sortBy(channels, 'userCount').reverse().slice(0, 5);
+    return sortBy(channels, 'userCount').reverse();
 }
 
 const getAllUsers = async () => {
